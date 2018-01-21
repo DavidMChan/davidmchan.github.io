@@ -1,2 +1,108 @@
-Hello World!
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>CS 267 - HW0</title>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <style type="text/css">
+        body {
+            padding-top: 2rem;
+        }
+        .starter-template {
+            padding: 3rem 1.5rem;
+            text-align: center;
+        }
+        .h2 {
+            padding-top: 1rem;
+        }
+        .fig {
+            text-align: center;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container">
+            <div class="starter-template">
+                <h1><strong>CS 267 - Homework 0</strong></h1>
+                <h4><strong>David Chan</strong></h4>
+            </div>
+            <div>
+                <h2>About Me & Course Goals</h2>
+                <p class="lead"> My name is David Chan, and I am a first year PhD student in the Computer Science department working with John Canny and Anca Dragan. Currently, my research interests lie in the area of explainable AI, and AI visualization. In particular, I am extremely interested in finding ways to visualize and understand the way in which AI systems make decisions, and making these decision processes intelligible to humans using the system. Not only this, but I believe that current systems largely tend to ignore the human interaction component, and improving the handoffs between human systems and AI systems is a key goal of my research. I have a background in Deep Learning and Combinatorial Search from my undergraduate education at the University of Denver. </p>
+
+                <p class="lead"> In general, the size of data that we're working with across the sciences is increasing - which demands scalable computers and algorithms which will allow us to make use of this data. The reason that I'm taking this course is that I hope to gain an increased understanding and some hands on expeience working with parallel algorithms - as increasingly I find myself needing to make use of parallelism to handle either large amounts of data, or tricky exponential search problems which have large state spaces that need to be explored. Through this class I hope to gain a further understanding of how to optimize the "naive" parallel code that I write to handle the problems that I frequrently encounter in my research.</p>
+            </div>
+
+            <div>
+                    <h2>Applications of Parallel Computing: Parallel Solvers for Partially Observable Markov Decision Processes</h2>
+                    <br>
+
+                    <h3> Motivation </h3>
+                    <p class="lead"> The field of algorithmic human-robot interaction is the study of developing algorithms which allow humans and robots to interact in the same world. As AI agents improve their abilities to perform basic tasks such as vision and locomotion, it becomes increasingly important to allow AI agents to optimize over more global reward functions which can help human operators perform tasks. To avoid ushering in the age of killer robots, it is important to know that AI agents pursue the <i>right</i> global reward functions - that is, the reward function that the human operator's objectives. It is, however, often tricky to specify the exact nature of the reward function. An idea as simple as "bring me coffe as quickly as possibl" can have a multitude of hidden consequences (that is, the robot may choose to kill everyone in line at starbucks to increase the speed at which it brings it's user coffee). This leads to the <i>value alignment</i> problem - the problem of ensuting the agent optimizes for the what people want. </p>
+
+                    <p class="lead"> Instead of specifying tricky reward functions, an AI agent may attempt to infer the goals which the humans want through example - using an operators actions to learn about the reward function over time. The most common approach for this kind of optimization is Inverse Reinforcement Learning (IRL) [1], however IRL makes the assumptions that agents are passive observers, and that the human acts in isolation - not considering the actions of the agent. These are, of course, a bit broad - thus the technique of Cooperative Inverse Reinforcement Learning (CIRL) [2] was proposed which relaxes these assumptions. <b>CIRL is formulated as a two-player game between the human and the robot, and it has been shown that CIRL games can be solved by solving a partially observable markov decision process (POMDP).</b> Unfortunately, POMDPs are difficult to solve, and grow exponentially with respect to the action space. Thus, it is relatively interesting to investigate methods of solving POMDPs that are highly parallel, and can explore large decision spaces.</p> 
+                    
+                    <br>
+                    <h3>Parallel POMDP Solvers</h3>
+
+                    <p class="lead"> Because solving a POMDP is PSPACE-hard, POMDPs are often solved using approximation based techniques such as point-based value iteration (PBVI) [3] or Monte-Carlo value iteration [4]. In a POMDP, at each state, you have a choice of action, leading to a decision tree - and the goal is to find the action which results in the highest possible reward. However, the current state is unknown, so you maintain a belief over the possible states you are in, and you can take an expected best action over your belief states. Monte-Carlo value iteration creates approximate solutions by sampling from both the belief distribution and the action set over 1000s of runs, thus creating approximate expected values for each action decision. Point-Based value iteration works by maintaining a set of particles in the state distribution, and sampling only from the action set. Both of these methods allow for parallelization - which has widely been explored, both in the CPU and GPU domains. </p>
+
+
+                    <br>
+                    <h3> Natural CPU-Based parallezation of PBVI</h3> 
+                    <p class="lead"> Further focusing our discussion to PBVI, the algorithm itself admits a natural parallelization by allowing each particle to be explored by a single thread of processing [5]. To implement this approach, the authors of [5] use a thread pool, and a task queue to reduce the cost of thread execution. [5] performed experiments on machines with 8 processing cores, with 2.66GHz processors and 1.5GB of RAM. The results of the experiments run in [5] are shown in Figure 2. </p>
+
+                    <div class="fig">
+                        <img src="1.png"> </img>
+                        <p> <i>Figure 1.</i> The experimental results achieved by [5] on a number of POMDP sample problems using a naive particle-to-core parallel processing techniuqe. The results are shown in computation time (seconds). This figure shows that in general with computation-heavy problems (such as the RockSamples problem) speedup can be very nearly linear, however communication overhead can dominate smaller problems (such as the hallway problem).</p>
+                    </div>
+
+                    <br>
+                    <h3> GPU-Based parallezation of PBVI</h3> 
+                    <p class="lead"> [6] explores solving PBVI with a GPU-based approach, focusing on coalesced memory access optimizations and avoiding braching instructions in the code. By fully computing parts of the value iteration in a single GPU kernel, using a clevel recomputation technique to reduce memory accesses, and limiting array sizes, [6] shows significant speedups on GPU-based problems. The experiments here were run using a computer with an Intel(R) Core(TM) i7-4702HQ CPU at 2.20GHz, 8GB of RAM, and an Nvidia(R) GeForce GTX 870M graphics card using C++, CUDA(C) 7.0, and Python 3.4.3.</p>
+
+                    <div class="fig">
+                            <img src="2.png"> </img>
+                            <p> <i>Figure 2.</i> Computation time (s) for the update step of the parallel optimized PBVI algorithm on a number of target domains. The results are shown for different hyper-parameter sets, B1, B2, and B3 corresponding to different belief set sizes. By using GPU we can see that exponential speedups are possible given the size of the problem, and if the GPU can handle enough processes to contain the entire belief set. </p>
+                    </div>
+
+                    <br>
+                    <h3> Successes and Limitations </h3>
+
+                    <p class="lead"> In general, parallel POMDP solvers, though approximate, create relatively accurate solutions to the problems being solved [5]. Not only this, but by allowing the algorithm to keep track of a larger belief set in the case of PBVI or perform more samples in the case of Monte-Carlo sampling, the parallel algorithms can obtain higher accuracy in less time. Not only this, but the algorithms themselves admit natural methods for parallelization - which lead to strong parallel algorithms with very little overhead. </p>
+                    
+                    <p class="lead">Unfortunately, not everything is rainbows and roses. In many cases the running time is often not quick enough to perfom POMDP optimization in real time, or online as would be required by any algorithmic human-robot scenario. In addition to this, memory overhead becomes a much larger problem when solving more complex POMDPs, as the entire decision tree must be retained. In the case of a full information game like Chess, or Checkers, the decision tree can grow to be thousands of GBs of data, in the case of POMDPs, this can be even greater. Because HRI problems are often difficult to solve, and contain hundreds of possible actions - further exploration into the parallelizability of the algorithms is necessary. In addition to this, there are a number of more complex optimization techniques that have not yet been explored in the literatiure for POMDP solvers, a key idea being cache-oblivious POMDP solutions which could run on multiple computers or architectures without particular necessary optmization. </p>
+
+
+                    <br>
+                    <h3> References </h3>
+
+                    [1] Ng, Andrew Y., and Stuart J. Russell. "Algorithms for inverse reinforcement learning." Icml. 2000. <br>
+                    [2] Hadfield-Menell, Dylan, et al. "Cooperative inverse reinforcement learning." Advances in neural information processing systems. 2016. <br>
+                    [3] Pineau, Joelle, Geoff Gordon, and Sebastian Thrun. "Point-based value iteration: An anytime algorithm for POMDPs." IJCAI. Vol. 3. 2003. <br>
+                    [4] Thrun, Sebastian. "Monte carlo pomdps." Advances in neural information processing systems. 2000.<br>
+                    [5] Shani, Guy. "Evaluating point-based POMDP solvers on multicore machines." IEEE Transactions on Systems, Man, and Cybernetics, Part B (Cybernetics) 40.4 (2010): 1062-1074. <br>
+                    [6] Wray, Kyle Hollins, and Shlomo Zilberstein. "A parallel point-based POMDP algorithm leveraging GPUs." AAAI Fall Symposium on Sequential Decision Making for Intelligent Agents (SDMIA). 2015. <br>
+
+                    <br>
+                    <br>
+                    <br>
+
+                    
+
+                </div>
+            
+    </div>
+</body>
+
+</html>
